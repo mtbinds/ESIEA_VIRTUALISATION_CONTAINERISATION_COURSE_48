@@ -1,6 +1,6 @@
 # Indications pour le LAB
 
-Pour réaliser ce LAB de configuration de deux conteneurs Docker (MongoDB et Mongo-Express) avec des contraintes spécifiques, suivez ces étapes :
+Pour réaliser ce **LAB** de configuration de deux conteneurs Docker **(MongoDB et Mongo-Express)** avec des contraintes spécifiques, suivez ces étapes :
 
 - Créez un réseau Docker :
 
@@ -28,7 +28,7 @@ docker run -d --name lab-docker-mongo-express --network lab-docker-network -e ME
 
 - Accédez à l'interface `Mongo-Express` depuis un navigateur en ouvrant http://localhost:8080. Vous devriez voir l'interface de gestion de la base de données `MongoDB`.
 
-- Vous pouvez vérifier que les volumes fonctionnent en créant une base de données via l'interface Mongo-Express, puis en supprimant le conteneur `MongoDB` (`lab-docker-mongo`) et en le recréant avec la même commande que précédemment. Lorsque vous ouvrez à nouveau l'interface `Mongo-Express`, la base de données que vous avez créée précédemment devrait être présente, ce qui démontre que les données persistent correctement.
+- Vous pouvez vérifier que les volumes fonctionnent en créant une base de données via l'interface **Mongo-Express**, puis en supprimant le conteneur `MongoDB` (`lab-docker-mongo`) et en le recréant avec la même commande que précédemment. Lorsque vous ouvrez à nouveau l'interface `Mongo-Express`, la base de données que vous avez créée précédemment devrait être présente, ce qui démontre que les données persistent correctement.
 
 Cet exercice devrait vous permettre de configurer et faire communiquer ces deux conteneurs `Docker` selon les contraintes spécifiées.
 
