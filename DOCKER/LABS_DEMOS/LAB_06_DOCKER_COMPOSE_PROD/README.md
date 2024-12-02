@@ -82,3 +82,131 @@ Vous avez vu au cours du [LAB_04_DOCKER_IMAGES](../LAB_04_DOCKER_IMAGES) comment
 ## Vérification
 
 Pour vous assurez que l'exercice est réalisé correctement, vous devrez ouvrir votre navigateur sur le `localhost:80`.
+
+
+## Elements de réponses 
+
+Pour résoudre les problèmes rencontrés dans votre projet (erreurs de CORS, absence de données dans la base, etc.), voici les points importants à corriger et à comprendre.
+
+**1. Configurer un Proxy avec Nginx**
+
+- Problème : Les requêtes de l'application frontend vers le backend sont bloquées par la politique de Same-Origin Policy car le frontend fait des requêtes directement au backend (http://server:3001). Cela cause une erreur CORS.
+
+- Solution : Configurer un proxy dans Nginx pour rediriger les requêtes API (/api) du frontend vers le backend.
+
+- Pourquoi : Cela évite les problèmes de CORS en faisant en sorte que toutes les requêtes (API et frontend) soient servies depuis la même origine (http://localhost).
+
+**Fichier nginx.conf**
+
+Voici un exemple de configuration Nginx pour servir les fichiers statiques du frontend et proxy les requêtes vers le backend :
+
+```
+server {
+    listen 80;
+
+    # Serveur les fichiers statiques du frontend
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri /index.html;
+    }
+
+    # Proxy des requêtes API vers le backend
+    location /api/ {
+        proxy_pass http://server:3001/; # Rediriger vers le service backend
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+**2. Dockerfile pour le Frontend**
+
+Voici un exemple de Dockerfile pour le frontend qui utilise Nginx pour servir l'application :
+
+```
+# Utiliser l'image Nginx
+FROM nginx:alpine
+
+# Copier les fichiers construits par Vite (dist) dans le dossier Nginx
+COPY ./dist /usr/share/nginx/html
+
+# Ajouter la configuration personnalisée pour Nginx
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exposer le port 80 pour servir l'application
+EXPOSE 80
+
+# Lancer Nginx
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+
+**3. Créer la Base de Données Avant de Tester**
+
+- Problème : Si la table ou la base de données n’est pas créée, les requêtes au backend (http://server:3001/games) ne renverront pas de données.
+
+- Solution : Créer la base de données et la table avant de tester.
+
+Étapes :
+
+1. Accéder au Conteneur MySQL :
+
+```
+docker exec -it <nom-du-conteneur-database> bash
+```
+
+2. Se connecter à MySQL :
+
+```
+mysql -u root -p
+```
+
+3. Saisissez le mot de passe configuré dans le fichier docker-compose.yml.
+
+Créer la Table :
+
+```
+
+CREATE DATABASE IF NOT EXISTS crudgames;
+USE crudgames;
+
+CREATE TABLE IF NOT EXISTS games (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    genre VARCHAR(255) NOT NULL,
+    release_date DATE
+);
+```
+Ajouter des Données pour Tester :
+
+```
+INSERT INTO games (name, genre, release_date) VALUES ('Game 1', 'Action', '2024-01-01');
+```
+
+**4. Tester l’Application**
+
+Depuis le Conteneur Frontend
+
+Une fois la base de données et le backend correctement configurés, vous pouvez tester les requêtes directement depuis le conteneur frontend :
+
+1. Accéder au Conteneur Frontend :
+```
+docker exec -it <nom-du-conteneur-frontend> sh
+```
+
+2. Effectuer une Requête via curl :
+```
+curl -v http://server:3001/games
+```
+Cela devrait renvoyer les données disponibles dans la table games.
+
+**5. Résumé des Étapes pour Tester**
+
+- Configurer Nginx pour proxy les requêtes API.
+- Construire l’application frontend et utiliser Nginx pour la servir.
+- Créer la base de données et ajouter des données à la main.
+- Tester que le backend renvoie les données à travers l’URL http://server:3001/games
